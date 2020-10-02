@@ -77,6 +77,13 @@ def sync_star_table(url, token, stars, delete=False, name_col_name='Name', url_c
     client = NotionClient(token_v2=token)
     cv = client.get_collection_view(url)
 
+    # Index the stars by the URL, which is the unique ID we care about
+    stars_by_url = {}
+    for star in stars:
+        stars_by_url[star['url']] = star
+
+    # Index the rows by the URL
+
     rows_by_url = {}
     for row in cv.collection.get_rows():
         if len(getattr(row, url_col_name)) == 0:
@@ -89,6 +96,8 @@ def sync_star_table(url, token, stars, delete=False, name_col_name='Name', url_c
 
         rows_by_url[row.url] = row
 
+    # Add any GH stars that are not in the table rows
+
     for star in stars:
         if star['url'] not in rows_by_url:
             new_row = cv.collection.add_row()
@@ -98,11 +107,24 @@ def sync_star_table(url, token, stars, delete=False, name_col_name='Name', url_c
 
             print(f'Added new row for {star["name"]}')
 
-    if delete:
-        stars_by_url = {}
-        for star in stars:
-            stars_by_url[star['url']] = star
+    # Add any missing descriptions
 
+    for url, row in rows_by_url.items():
+        if len(getattr(row, description_col_name)) == 0:
+            if url not in stars_by_url:
+                # This star was deleted in the user's account but is still
+                # in the Notion table, so we'll skip it
+                continue
+
+            star = stars_by_url[url]
+            setattr(row, description_col_name, star['description'])
+
+            print(f'Filled missing description for {star["name"]}')
+
+    # Optionally delete rows for stars that are in the table but no longer
+    # listed in the user's account (deleted on GH)
+
+    if delete:
         for url, row in rows_by_url.items():
             if url not in stars_by_url:
                 row.remove()
