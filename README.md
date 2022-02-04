@@ -31,7 +31,7 @@ I recommend running the script in a nightly `cron` job.
 
 ## Why
 
-I use my [GitHub Stars](https://github.com/jmptable?tab=stars) as a
+I use my [GitHub Stars](https://github.com/jmpinit?tab=stars) as a
 way to squirrel away projects that might come in handy later. It's
 nice to follow other people who do the same and look at what they star
 because that allows me to discover new projects that I wouldn't have
